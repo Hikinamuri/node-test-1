@@ -17,6 +17,10 @@ app.listen(PORT, () => {
     console.log(`Сервер запущен на порту: ${PORT}`);
 })
 
+client.connect()
+  .then(() => console.log('Connected to PostgreSQL'))
+  .catch(err => console.error('Connection error', err.stack));
+
 app.get('/api/v1/getUser/', (req, res) => {
     res.json({
         message: process.env.PGHOST

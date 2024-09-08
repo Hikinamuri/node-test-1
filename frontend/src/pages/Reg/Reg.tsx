@@ -8,7 +8,6 @@ export const Reg = () => {
     })
 
     const inputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value, event.target.name)
         const targetName = event.target.name
         const targetValue = event.target.value
         
@@ -18,24 +17,30 @@ export const Reg = () => {
         }))
     }
 
-    const logUserData = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const saveUser = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-        console.log(userData)
-    }
 
-    const saveUser = () => {
-        fetch('http://localhost:5172/api/v1/getUser/')
-
+        fetch('http://localhost:5172/api/v1/saveUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data)
+        })
     }
 
     return (
         <div>
-            <p>Авторизация</p>
+            <p>Регистрация</p>
             <form action="" onSubmit={saveUser}>
                 <input type="text" name='name' value={userData.name} onChange={inputChange}/>
                 <input type="text" name='email' value={userData.email} onChange={inputChange}/>
                 <input type="text" name='password' value={userData.password} onChange={inputChange}/>
-                <button onClick={logUserData}>Click</button>
+                <button type="submit">Зарегистрироваться</button>
             </form>
         </div>
     )

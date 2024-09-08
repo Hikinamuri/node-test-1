@@ -1,8 +1,9 @@
-const { Client } = require('pg');
 require('dotenv').config();
+const { Client } = require('pg');
+const cors = require('cors');
 const express = require('express'),
     app = express(),
-    PORT = process.env.PORT || 3001
+    PORT = process.env.PORT || 5172
 
 
 const client = new Client({
@@ -12,6 +13,10 @@ const client = new Client({
     database: process.env.PGDATABASE,
     port: process.env.PGPORT,
 });
+
+app.use(cors({
+    origin: 'http://localhost:5173'
+}));
 
 app.listen(PORT, () => {
     console.log(`Сервер запущен на порту: ${PORT}`);

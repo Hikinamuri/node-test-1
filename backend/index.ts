@@ -1,9 +1,15 @@
-require('dotenv').config();
-const { Client } = require('pg');
-const cors = require('cors');
-const express = require('express'),
-    app = express(),
-    PORT = process.env.PORT || 5172
+import express, { Request, Response } from 'express';
+import 'dotenv/config';
+import { Client, QueryResult } from 'pg';
+import cors from 'cors';
+
+const app = express();
+const PORT = process.env.PORT || 5172
+
+
+interface PostgreSQLError extends Error {
+    code?: string;
+}
 
 
 const client = new Client({
@@ -11,7 +17,7 @@ const client = new Client({
     user: process.env.PGUSER,
     password: process.env.PGPASSWORD,
     database: process.env.PGDATABASE,
-    port: process.env.PGPORT,
+    port: process.env.PGPORT ? parseInt(process.env.PGPORT) : undefined,
 });
 
 app.use(cors({
@@ -25,7 +31,7 @@ app.listen(PORT, () => {
 
 client.connect()
   .then(() => console.log('Connected to PostgreSQL'))
-  .catch(err => console.error('Connection error', err.stack));
+  .catch((err: Error) => console.error('Connection error', err.stack));
 
 app.post('/api/v1/saveUser', (req, res) => {
     const { name, email, password } = req.body;
@@ -38,15 +44,19 @@ app.post('/api/v1/saveUser', (req, res) => {
     `;
 
     client.query(query, values)
-        .then(result => {
+        .then((result: QueryResult) => {
             console.log('User saved with ID:', result.rows[0].id);
             res.json({
                 message: 'Success',
                 userId: result.rows[0].id,
             });
         })
-        .catch(err => {
-            console.error('Error saving user:', err.stack);
-            res.status(500).json({ message: 'Error saving user' });
+        .catch((err: PostgreSQLError) => {
+            console.error('Error saving user:', err.code);
+            if (err.code === '23505') {
+                res.status(409).json({ message: 'Duplicate key value' });
+            } else {
+                res.status(500).json({ message: 'Error saving user' });
+            }
         });
 })

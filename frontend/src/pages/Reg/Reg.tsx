@@ -20,6 +20,11 @@ export const Reg = () => {
     const saveUser = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
 
+        if (userData.name.length <= 4 || userData.password.length < 8) {
+            alert(`Слишком короткое поле ${userData.name.length <= 4 ? 'Имя' : ''}${userData.password.length < 8 ? 'Пароль' : ''} `)
+            return;
+        }
+
         fetch('http://localhost:5172/api/v1/saveUser', {
             method: 'POST',
             headers: {
@@ -27,9 +32,14 @@ export const Reg = () => {
             },
             body: JSON.stringify(userData),
         })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data)
+        .then(response => {
+            if (response.status === 409) {
+                alert('Пользователь с таким email уже существует')
+            }
+            else if (!response.ok) {
+                console.log('Error')
+            }
+            return alert('Регистрация успешна!')
         })
     }
 
@@ -38,8 +48,8 @@ export const Reg = () => {
             <p>Регистрация</p>
             <form action="" onSubmit={saveUser}>
                 <input type="text" name='name' value={userData.name} onChange={inputChange}/>
-                <input type="text" name='email' value={userData.email} onChange={inputChange}/>
-                <input type="text" name='password' value={userData.password} onChange={inputChange}/>
+                <input type="email" name='email' value={userData.email} onChange={inputChange}/>
+                <input type="password" name='password' value={userData.password} onChange={inputChange}/>
                 <button type="submit">Зарегистрироваться</button>
             </form>
         </div>

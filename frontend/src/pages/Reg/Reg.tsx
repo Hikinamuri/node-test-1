@@ -25,7 +25,7 @@ export const Reg = () => {
             return;
         }
 
-        fetch('http://localhost:5172/api/v1/saveUser', {
+        fetch('http://localhost:5172/api/v1/registration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -34,7 +34,12 @@ export const Reg = () => {
         })
         .then(response => {
             if (response.status === 409) {
-                alert('Пользователь с таким email уже существует')
+                return alert('Пользователь с таким email уже существует')
+            }
+            else if (response.status === 400) {
+                return response.json().then(data => {
+                    alert(data.message)
+                })
             }
             else if (!response.ok) {
                 console.log('Error')

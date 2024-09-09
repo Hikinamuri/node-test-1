@@ -33,9 +33,21 @@ client.connect()
   .then(() => console.log('Connected to PostgreSQL'))
   .catch((err: Error) => console.error('Connection error', err.stack));
 
-app.post('/api/v1/saveUser', (req, res) => {
+app.post('/api/v1/registration', (req, res) => {
     const { name, email, password } = req.body;
     const values = [name, email, password];
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    
+    if(!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Неправильный формат почты' });
+    }
+
+    if(!passwordRegex.test(password)) {
+        return res.status(400).json({ message: 'Неправильный формат пароля' });
+    }
+
 
     const query = `
         INSERT INTO users (user_name, email, password)

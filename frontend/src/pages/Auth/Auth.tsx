@@ -46,6 +46,7 @@ export const Auth = () => {
                 console.log('Error')
             }
             response.json().then(data => {
+                sessionStorage.setItem('node-user_name', data.userName)
                 sessionStorage.setItem(`node-${data.userName}-access_token`, data.token)
             })
             return alert('Авторизация успешна!'), navigate('/home')

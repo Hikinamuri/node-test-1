@@ -115,7 +115,47 @@ router.post('/authorization', (req: Request, res: Response) => {
         })
         .catch((err: PostgreSQLError) => {
             console.error('Error saving user:', err.message, err.code);
-            res.status(500).json({ message: 'Error saving user' });
+            res.status(500).json({ message: 'Error auth user' });
+        });
+});
+
+router.get('/getTasks', (req: Request, res: Response) => {
+    const access_token = req.headers.authorization;
+
+    const query = `
+        SELECT id
+        FROM users
+        WHERE access_token = $1;
+    `;
+
+    client.query(query, [access_token])
+        .then(async (result: QueryResult) => {
+            const getTasks = `
+                SELECT id, name, description
+                FROM tasks
+                WHERE user_id = $1;
+            `;
+
+            const user_id = result.rows[0].id;
+
+            client.query(getTasks, [user_id])
+                .then(async (result: QueryResult) => {
+                    const tasks = result.rows;
+                    console.log(tasks);
+
+                    res.json({
+                        message: 'Get tasks successful',
+                        tasks: tasks,
+                    });
+                })
+                .catch((err: PostgreSQLError) => {
+                    console.error('Error saving user:', err.message, err.code);
+                    res.status(500).json({ message: 'Error get tasks' });
+                });
+        })
+        .catch((err: PostgreSQLError) => {
+            console.error('Error get tasks:', err.message, err.code);
+            res.status(500).json({ message: 'Error get tasks' });
         });
 });
 

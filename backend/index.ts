@@ -72,3 +72,51 @@ app.post('/api/v1/registration', (req, res) => {
             }
         });
 })
+
+
+
+app.post('/api/v1/authorization', (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    const values = [email, password];
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    
+    if(!emailRegex.test(email)) {
+        return res.status(400).json({ message: 'Неправильный формат почты' });
+    }
+
+    if(!passwordRegex.test(password)) {
+        return res.status(400).json({ message: 'Неправильный формат пароля' });
+    }
+
+
+    const query = `
+        SELECT id, user_name
+        FROM users
+        WHERE email = $1 AND password = $2;
+    `;
+
+    client.query(query, values)
+        .then((result: QueryResult) => {
+            if (result.rows.length === 0) {
+                return res.status(401).json({ message: 'Invalid email or password' });
+            }
+            const user = result.rows[0];
+            res.json({
+                message: 'Authorization successful',
+                userId: user.id,
+                userName: user.user_name,
+                userEmail: user.user_email
+            });
+        })
+        .catch((err: PostgreSQLError) => {
+            console.error('Error saving user:', err.code);
+            res.status(500).json({ message: 'Error saving user' });
+        });
+})

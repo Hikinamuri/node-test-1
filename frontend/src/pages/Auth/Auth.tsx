@@ -2,13 +2,11 @@ import { ReactEventHandler, useEffect, useState } from "react"
 
 export const Auth = () => {
     const [userData, setUserData] = useState({
-        name: "",
         email: "",
         password: "",
     })
 
     const inputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        console.log(event.target.value, event.target.name)
         const targetName = event.target.name
         const targetValue = event.target.value
         
@@ -18,25 +16,44 @@ export const Auth = () => {
         }))
     }
 
-    const logUserData = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const authUser = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
-        console.log(userData)
-    }
 
-    const saveUser = () => {
-        fetch('http://localhost:5172/api/v1/getUser/')
-            .then(response => response.json())
-            .then(response => setData(response.message))
+        if (userData.password.length < 8) {
+            alert(`Слишком короткое поле Пароль`)
+            return;
+        }
+
+        fetch('http://localhost:5172/api/v1/authorization', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(userData),
+        })
+        .then(response => {
+            if (response.status === 401) {
+                return alert('Неправильынй логин или пароль')
+            }
+            else if (response.status === 400) {
+                return response.json().then(data => {
+                    alert(data.message)
+                })
+            }
+            else if (!response.ok) {
+                console.log('Error')
+            }
+            return alert('Авторизация успешна!')
+        })
     }
 
     return (
         <div>
             <p>Авторизация</p>
-            <form action="" onSubmit={saveUser}>
-                <input type="text" name='name' value={userData.name} onChange={inputChange}/>
-                <input type="text" name='email' value={userData.email} onChange={inputChange}/>
-                <input type="text" name='password' value={userData.password} onChange={inputChange}/>
-                <button onClick={logUserData}>Click</button>
+            <form action="" onSubmit={authUser}>
+                <input type="email" name='email' value={userData.email} onChange={inputChange}/>
+                <input type="password" name='password' value={userData.password} onChange={inputChange}/>
+                <button type="submit">Авторизоваться</button>
             </form>
         </div>
     )

@@ -1,6 +1,8 @@
-import { ReactEventHandler, useEffect, useState } from "react"
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export const Auth = () => {
+    const navigate = useNavigate()
     const [userData, setUserData] = useState({
         email: "",
         password: "",
@@ -43,7 +45,7 @@ export const Auth = () => {
             else if (!response.ok) {
                 console.log('Error')
             }
-            return alert('Авторизация успешна!')
+            return alert('Авторизация успешна!'), navigate('/home')
         })
     }
 

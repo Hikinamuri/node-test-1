@@ -1,6 +1,8 @@
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 export const Reg = () => {
+    const navigate = useNavigate()
     const [userData, setUserData] = useState({
         name: "",
         email: "",
@@ -44,7 +46,7 @@ export const Reg = () => {
             else if (!response.ok) {
                 console.log('Error')
             }
-            return alert('Регистрация успешна!')
+            return alert('Регистрация успешна!'), navigate('/auth')
         })
     }
 

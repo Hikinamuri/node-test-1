@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import 'dotenv/config';
 import { Client, QueryResult } from 'pg';
 import cors from 'cors';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const PORT = process.env.PORT || 5172
@@ -33,7 +34,7 @@ client.connect()
   .then(() => console.log('Connected to PostgreSQL'))
   .catch((err: Error) => console.error('Connection error', err.stack));
 
-app.post('/api/v1/registration', (req, res) => {
+app.post('/api/v1/registration', (req: Request, res: Response) => {
     const { name, email, password } = req.body;
     const values = [name, email, password];
 
@@ -75,7 +76,7 @@ app.post('/api/v1/registration', (req, res) => {
 
 
 
-app.post('/api/v1/authorization', (req, res) => {
+app.post('/api/v1/authorization', (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -103,20 +104,35 @@ app.post('/api/v1/authorization', (req, res) => {
     `;
 
     client.query(query, values)
-        .then((result: QueryResult) => {
+        .then(async(result: QueryResult) => {
             if (result.rows.length === 0) {
                 return res.status(401).json({ message: 'Invalid email or password' });
             }
+
             const user = result.rows[0];
+            
+            const token = jwt.sign(
+                { userId: user.id, userName: user.user_name },
+                process.env.JWT_SECRET as string,
+                { expiresIn: '1h' }
+            );
+
+            const updateQuery = `
+                UPDATE users
+                SET access_token = $1
+                WHERE id = $2;
+            `;
+
+            await client.query(updateQuery, [token, user.id]);
+
             res.json({
                 message: 'Authorization successful',
-                userId: user.id,
                 userName: user.user_name,
-                userEmail: user.user_email
+                token: token
             });
         })
         .catch((err: PostgreSQLError) => {
-            console.error('Error saving user:', err.code);
+            console.error('Error saving user:', err.message, err.code);
             res.status(500).json({ message: 'Error saving user' });
         });
 })
